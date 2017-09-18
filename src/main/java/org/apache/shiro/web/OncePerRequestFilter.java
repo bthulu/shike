@@ -11,7 +11,6 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,41 +68,41 @@ public class OncePerRequestFilter implements Filter {
                 }
 
                 //确定是否具备所需权限
-                boolean b = true;
-                try {
-                    for (String s : split) {
-                        int length = s.length();
-                        if (length < 8) {
-                            continue;
-                        }
-                        int i = s.indexOf("[");
-                        if (i == -1 || i > length - 3) {
-                            continue;
-                        }
-                        String type = s.substring(0, i);
-                        String[] typeValues = s.substring(i + 1, length - 1).split(",");
-                        Subject subject = SecurityUtils.getSubject();
-                        if ("authc".equals(type)) {
-                            b = subject.isAuthenticated();
-                        } else if ("perms".equals(type)) {
-                            if (typeValues.length == 1) {
-                                b = subject.isPermitted(typeValues[0]);
-                            } else {
-                                b = subject.isPermittedAll(typeValues);
+                Subject subject = SecurityUtils.getSubject();
+                boolean b = subject.isAuthenticated();
+                if (b) {//if logon, then verify roles and perms
+                    try {
+                        for (String s : split) {
+                            int length = s.length();
+                            if (length < 8) {
+                                continue;
                             }
-                        } else if ("roles".equals(type)) {
-                            if (typeValues.length == 1) {
-                                b = subject.hasRole(typeValues[0]);
-                            } else {
-                                b = subject.hasRoles(typeValues);
+                            int i = s.indexOf("[");
+                            if (i == -1 || i > length - 3) {
+                                continue;
+                            }
+                            String type = s.substring(0, i);
+                            String[] typeValues = s.substring(i + 1, length - 1).split(",");
+                            if ("perms".equals(type)) {
+                                if (typeValues.length == 1) {
+                                    b = subject.isPermitted(typeValues[0]);
+                                } else {
+                                    b = subject.isPermittedAll(typeValues);
+                                }
+                            } else if ("roles".equals(type)) {
+                                if (typeValues.length == 1) {
+                                    b = subject.hasRole(typeValues[0]);
+                                } else {
+                                    b = subject.hasRoles(typeValues);
+                                }
+                            }
+                            if (!b) {
+                                break;
                             }
                         }
-                        if (!b) {
-                            break;
-                        }
+                    } catch (Throwable t) {
+                        b = false;
                     }
-                } catch (Throwable t) {
-                    b = false;
                 }
 
                 if (!b) {

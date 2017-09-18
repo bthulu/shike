@@ -40,15 +40,18 @@ public class ShiroSpringMvcIntercepter extends HandlerInterceptorAdapter {
         }
 
         //已登陆验证
+        boolean authenticated = false;//if logon, set to true. this can reduce assertAuthenticated(subject) while verify permits and roles
         Subject subject = SecurityUtils.getSubject();
         if (requiresAuthentication != null) {
-            boolean b = subject.isAuthenticated();
-            if (!b) {
-                throw new UnauthenticatedException();
-            }
+            assertAuthenticated(subject);
+            authenticated = true;
         }
         //权限验证
         if (requiresPermissions != null) {
+            if (!authenticated) {
+                assertAuthenticated(subject);
+                authenticated = true;
+            }
             String[] value = requiresPermissions.value();
             Logical logical = requiresPermissions.logical();
             boolean b;
@@ -71,6 +74,9 @@ public class ShiroSpringMvcIntercepter extends HandlerInterceptorAdapter {
         }
         //角色验证
         if (requiresRoles != null) {
+            if (!authenticated) {
+                assertAuthenticated(subject);
+            }
             String[] value = requiresRoles.value();
             Logical logical = requiresRoles.logical();
             boolean b;
@@ -95,4 +101,10 @@ public class ShiroSpringMvcIntercepter extends HandlerInterceptorAdapter {
         return true;
     }
 
+    private void assertAuthenticated(Subject subject) {
+        boolean b = subject.isAuthenticated();
+        if (!b) {
+            throw new UnauthenticatedException();
+        }
+    }
 }

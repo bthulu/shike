@@ -1,64 +1,59 @@
 package org.apache.shiro.subject;
 
 import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.realm.Realm;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Created on  2017/8/30 10:19
  *
  * @author gejian
  */
-public abstract class WebSubject implements Subject {
+public abstract class WebSubject<T extends Serializable> implements Subject<T> {
 
-    protected Realm realm;
+    @Override
+    public Set<String> getRoles() {
+        T principal = getPrincipal();
+        return getRoles(principal);
+    }
 
-    public WebSubject(Realm realm) {
-        this.realm = realm;
+    @Override
+    public Set<String> getPermits() {
+        T principal = getPrincipal();
+        return getPermits(principal);
     }
 
     @Override
     public boolean isPermitted(String permission) {
-        Serializable principal = getPrincipal();
-        if (principal == null) {
-            return false;
+        if (permission == null) {
+            return true;
         }
-        AuthorizationInfo authorizationInfo = realm.doGetAuthorizationInfo(principal);
-        Collection<Serializable> permissions = authorizationInfo.getPermissions();
-        return permissions != null && permissions.contains(permission);
+        Set<String> permits = getPermits();
+        return permits != null && permits.contains(permission);
     }
 
     @Override
     public boolean isPermittedAll(String... perms) {
-        Serializable principal = getPrincipal();
-        if (principal == null) {
-            return false;
+        if (perms == null || perms.length == 0) {
+            return true;
         }
-        AuthorizationInfo authorizationInfo = realm.doGetAuthorizationInfo(principal);
-        Collection<Serializable> permissions = authorizationInfo.getPermissions();
-        List<String> list = Arrays.asList(perms);
-        return permissions != null && permissions.containsAll(list);
+        Set<String> permits = getPermits();
+        return permits != null && permits.containsAll(Arrays.asList(perms));
     }
 
     @Override
     public boolean isAnyPermitted(String... perms) {
-        Serializable principal = getPrincipal();
-        if (principal == null) {
-            return false;
+        if (perms == null || perms.length == 0) {
+            return true;
         }
-        AuthorizationInfo authorizationInfo = realm.doGetAuthorizationInfo(principal);
-        Collection<Serializable> permissions = authorizationInfo.getPermissions();
-        if (permissions == null) {
-            return false;
-        }
-        for (Serializable perm : perms) {
-            if (permissions.contains(perm)) {
-                return true;
+        Set<String> permits = getPermits();
+        if (permits != null) {
+            for (String perm : perms) {
+                if (permits.contains(perm)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -90,41 +85,33 @@ public abstract class WebSubject implements Subject {
 
     @Override
     public boolean hasRole(String roleIdentifier) {
-        Serializable principal = getPrincipal();
-        if (principal == null) {
-            return false;
+        if (roleIdentifier == null) {
+            return true;
         }
-        AuthorizationInfo authorizationInfo = realm.doGetAuthorizationInfo(principal);
-        Collection<Serializable> roles = authorizationInfo.getRoles();
+        Set<String> roles = getRoles();
         return roles != null && roles.contains(roleIdentifier);
     }
 
     @Override
     public boolean hasRoles(String... roleIdentifiers) {
-        Serializable principal = getPrincipal();
-        if (principal == null) {
-            return false;
+        if (roleIdentifiers == null || roleIdentifiers.length == 0) {
+            return true;
         }
-        AuthorizationInfo authorizationInfo = realm.doGetAuthorizationInfo(principal);
-        Collection<Serializable> roles = authorizationInfo.getRoles();
-        List<String> list = Arrays.asList(roleIdentifiers);
-        return roles != null && roles.containsAll(list);
+        Set<String> roles = getRoles();
+        return roles != null && roles.containsAll(Arrays.asList(roleIdentifiers));
     }
 
     @Override
     public boolean hasAnyRole(String... roleIdentifiers) {
-        Serializable principal = getPrincipal();
-        if (principal == null) {
-            return false;
+        if (roleIdentifiers == null || roleIdentifiers.length == 0) {
+            return true;
         }
-        AuthorizationInfo authorizationInfo = realm.doGetAuthorizationInfo(principal);
-        Collection<Serializable> roles = authorizationInfo.getRoles();
-        if (roles == null) {
-            return false;
-        }
-        for (Serializable roleIdentifier : roleIdentifiers) {
-            if (roles.contains(roleIdentifier)) {
-                return true;
+        Set<String> roles = getRoles();
+        if (roles != null) {
+            for (String roleIdentifier : roleIdentifiers) {
+                if (roles.contains(roleIdentifier)) {
+                    return true;
+                }
             }
         }
         return false;

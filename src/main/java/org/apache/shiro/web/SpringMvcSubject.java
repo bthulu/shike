@@ -1,7 +1,7 @@
 package org.apache.shiro.web;
 
-import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.WebSubject;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -12,19 +12,19 @@ import java.io.Serializable;
  *
  * @author gejian
  */
-public abstract class SpringMvcSubject extends WebSubject {
+public abstract class SpringMvcSubject<T extends Serializable> extends WebSubject<T> {
     // used as the HttpServletRequest's attribute key for token
     private static final String TOKEN_KEY = "SMvcS_TOKEN_KEY";
 
-    private HttpServletRequest request;
+    protected HttpServletRequest request;
 
-    public SpringMvcSubject(Realm realm, HttpServletRequest request) {
-        super(realm);
+    @Autowired
+    public void setRequest(HttpServletRequest request) {
         this.request = request;
     }
 
     @Override
-    public Serializable getPrincipal() {
+    public T getPrincipal() {
         return getPrincipal(request);
     }
 
@@ -38,13 +38,14 @@ public abstract class SpringMvcSubject extends WebSubject {
         return request.getSession();
     }
 
-    protected abstract Serializable getPrincipal(HttpSession session);
+    protected abstract T getPrincipal(HttpSession session);
 
     /**
      * get token from request, if null, then get from session, and set to request
      */
-    public Serializable getPrincipal(HttpServletRequest request) {
-        Serializable token = (Serializable) request.getAttribute(TOKEN_KEY);
+    @SuppressWarnings("unchecked")
+    protected T getPrincipal(HttpServletRequest request) {
+        T token = (T) request.getAttribute(TOKEN_KEY);
         if (token == null) {
             HttpSession session = request.getSession();
             token = getPrincipal(session);
