@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 
 
-public class ShiroSpringMvcIntercepter extends HandlerInterceptorAdapter {
+public class ShiroSpringMvcInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
