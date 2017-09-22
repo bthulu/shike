@@ -27,10 +27,17 @@ public class OncePerRequestFilter implements Filter {
         this.filterChainDefinition = filterChainDefinition;
     }
 
-    private String redirectUrl = "login.html";
+    private String loginUrl = "/login.html";
 
-    public void setRedirectUrl(String redirectUrl) {
-        this.redirectUrl = redirectUrl;
+    /**
+     * only absolute url supported
+     * @param loginUrl absolute-login-url
+     */
+    public void setLoginUrl(String loginUrl) {
+        if (loginUrl == null || !loginUrl.startsWith("/")) {
+            throw new IllegalArgumentException("only absolute login url supported");
+        }
+        this.loginUrl = loginUrl;
     }
 
     @Override
@@ -40,10 +47,17 @@ public class OncePerRequestFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        //login page, pass directly
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        String contextPath = request.getServletContext().getContextPath();
+        String requestURI = request.getRequestURI().substring(contextPath.length());
+        if (requestURI.equals(loginUrl)) {
+            filterChain.doFilter(request, servletResponse);
+            return;
+        }
+
         Map<String, String> chainMap = filterChainDefinition.getFilterChainMap();
         if (chainMap != null) {
-            HttpServletRequest request = (HttpServletRequest) servletRequest;
-            String requestURI = request.getRequestURI();
             String pattern = null;
             Set<String> patterns = chainMap.keySet();
             for (String p : patterns) {
@@ -110,9 +124,9 @@ public class OncePerRequestFilter implements Filter {
                         HttpServletResponse response = (HttpServletResponse) servletResponse;
                         response.sendRedirect(redirect);
                         return;
-                    } else if (redirectUrl != null) {
+                    } else if (loginUrl != null) {
                         HttpServletResponse response = (HttpServletResponse) servletResponse;
-                        response.sendRedirect(redirectUrl);
+                        response.sendRedirect(loginUrl);
                         return;
                     } else {
                         throw new AuthenticationException("you are not allowed");

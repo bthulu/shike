@@ -15,6 +15,13 @@ public class DefaultShiroFilterChainDefinition implements ShiroFilterChainDefini
 
     private final Map<String, String> filterChainDefinitionMap;
 
+    /**
+     * The last string stands for redirect url, if not allowed to access, which will redirect to.
+     * So, don't forget to give a anon to this redirect url at the last definitions. Or it will loop infinitely.
+     *
+     * @param antPath
+     * @param definition
+     */
     public void addPathDefinition(String antPath, String definition) {
         filterChainDefinitionMap.put(antPath, definition);
     }
