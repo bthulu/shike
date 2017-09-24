@@ -1,6 +1,7 @@
 package org.apache.shiro;
 
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.WebSubject;
 import org.apache.shiro.web.ShiroSpringMvcInterceptor;
 
 /**
@@ -23,5 +24,12 @@ public abstract class SecurityUtils {
             throw new ShiroException("subject can not be null");
         }
         return subject;
+    }
+
+    public static WebSubject getWebSubject() {
+        if (subject == null) {
+            throw new ShiroException("subject can not be null");
+        }
+        return (WebSubject) subject;
     }
 }

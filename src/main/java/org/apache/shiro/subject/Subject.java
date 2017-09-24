@@ -2,7 +2,6 @@ package org.apache.shiro.subject;
 
 import org.apache.shiro.authz.AuthorizationException;
 
-import javax.servlet.http.HttpSession;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -51,7 +50,20 @@ public interface Subject<T extends Serializable> {
 
     boolean isAuthenticated();
 
-    HttpSession getSession();
-
+    /**
+     * logout current principal
+     */
     void logout();
+
+    /**
+     * logout the specified principal
+     * @param principal the principal to be logout
+     */
+    void logout(T principal);
+
+    /**
+     * logout the specified principals
+     * @param principals the principals to be logout
+     */
+    void logout(T... principals);
 }

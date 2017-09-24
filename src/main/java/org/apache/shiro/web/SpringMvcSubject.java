@@ -1,6 +1,6 @@
 package org.apache.shiro.web;
 
-import org.apache.shiro.subject.WebSubject;
+import org.apache.shiro.subject.AbstractWebSubject;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +12,7 @@ import java.io.Serializable;
  *
  * @author gejian
  */
-public abstract class SpringMvcSubject<T extends Serializable> extends WebSubject<T> {
+public abstract class SpringMvcSubject<T extends Serializable> extends AbstractWebSubject<T> {
     // used as the HttpServletRequest's attribute key for token
     private static final String TOKEN_KEY = "SMvcS_TOKEN_KEY";
 
@@ -33,24 +33,28 @@ public abstract class SpringMvcSubject<T extends Serializable> extends WebSubjec
         return getPrincipal() != null;
     }
 
-    @Override
-    public HttpSession getSession() {
-        return request.getSession();
-    }
-
-    protected abstract T getPrincipal(HttpSession session);
-
     /**
      * get token from request, if null, then get from session, and set to request
      */
     @SuppressWarnings("unchecked")
-    protected T getPrincipal(HttpServletRequest request) {
+    public T getPrincipal(HttpServletRequest request) {
         T token = (T) request.getAttribute(TOKEN_KEY);
         if (token == null) {
-            HttpSession session = request.getSession();
-            token = getPrincipal(session);
+            token = getPrincipal(request.getSession());
             request.setAttribute(TOKEN_KEY, token);
         }
         return token;
+    }
+
+    protected abstract T getPrincipal(HttpSession session);
+
+    @Override
+    public void logout() {
+        logout(request);
+    }
+
+    @Override
+    public void logout(HttpServletRequest request) {
+        request.getSession().invalidate();
     }
 }
