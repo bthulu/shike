@@ -1,8 +1,8 @@
 package org.apache.shiro;
 
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.WebSubject;
 import org.apache.shiro.web.ShiroSpringMvcInterceptor;
+import org.apache.shiro.web.WebSubject;
 
 /**
  * Created on  2017/8/30 9:52

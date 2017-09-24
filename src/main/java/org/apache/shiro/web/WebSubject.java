@@ -1,4 +1,6 @@
-package org.apache.shiro.subject;
+package org.apache.shiro.web;
+
+import org.apache.shiro.subject.Subject;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;

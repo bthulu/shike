@@ -1,7 +1,6 @@
 package org.apache.shiro.web;
 
 import org.apache.shiro.subject.AbstractSubject;
-import org.apache.shiro.subject.WebSubject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
