@@ -1,7 +1,7 @@
 package org.apache.shiro.web;
 
-import org.apache.shiro.subject.AbstractWebSubject;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.shiro.subject.AbstractSubject;
+import org.apache.shiro.subject.WebSubject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -12,20 +12,15 @@ import java.io.Serializable;
  *
  * @author gejian
  */
-public abstract class SpringMvcSubject<T extends Serializable> extends AbstractWebSubject<T> {
+public abstract class AbstractWebSubject<T extends Serializable> extends AbstractSubject<T> implements WebSubject<T> {
     // used as the HttpServletRequest's attribute key for token
     private static final String TOKEN_KEY = "SMvcS_TOKEN_KEY";
 
-    protected HttpServletRequest request;
-
-    @Autowired
-    public void setRequest(HttpServletRequest request) {
-        this.request = request;
-    }
+    protected abstract HttpServletRequest getCurrentRequest();
 
     @Override
     public T getPrincipal() {
-        return getPrincipal(request);
+        return getPrincipal(getCurrentRequest());
     }
 
     @Override
@@ -50,7 +45,7 @@ public abstract class SpringMvcSubject<T extends Serializable> extends AbstractW
 
     @Override
     public void logout() {
-        logout(request);
+        logout(getCurrentRequest());
     }
 
     @Override

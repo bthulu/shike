@@ -11,7 +11,7 @@ import java.util.Set;
  *
  * @author gejian
  */
-public abstract class AbstractWebSubject<T extends Serializable> implements WebSubject<T> {
+public abstract class AbstractSubject<T extends Serializable> implements Subject<T> {
 
     @Override
     public Set<String> getRoles() {
