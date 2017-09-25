@@ -67,6 +67,18 @@ public class OncePerRequestFilter implements Filter {
                 }
             }
             if (pattern != null && !pattern.startsWith("anon")) {
+                Subject subject = SecurityUtils.getSubject();
+                boolean b = subject.isAuthenticated();
+                if (pattern.startsWith("authc")) {
+                    if (b) {
+                        if (pattern.length() > 5 && pattern.charAt(5) == ',') {
+                            pattern = pattern.substring(6);
+                        } else {
+                            pattern = "";
+                        }
+                    }
+                }
+
                 String[] split = pattern.split("],");
                 //逗号隔开的最后一条, 如果不包含中括号, 则作为权限失败时的跳转页面
                 String redirect = null;
@@ -81,9 +93,7 @@ public class OncePerRequestFilter implements Filter {
                     }
                 }
 
-                //确定是否具备所需权限
-                Subject subject = SecurityUtils.getSubject();
-                boolean b = subject.isAuthenticated();
+
                 if (b) {//if logon, then verify roles and perms
                     try {
                         for (String s : split) {
