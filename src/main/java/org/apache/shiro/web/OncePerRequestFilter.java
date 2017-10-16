@@ -132,11 +132,11 @@ public class OncePerRequestFilter implements Filter {
                 if (!b) {
                     if (redirect != null) {
                         HttpServletResponse response = (HttpServletResponse) servletResponse;
-                        response.sendRedirect(redirect);
+                        response.sendRedirect(contextPath + redirect);
                         return;
                     } else if (loginUrl != null) {
                         HttpServletResponse response = (HttpServletResponse) servletResponse;
-                        response.sendRedirect(loginUrl);
+                        response.sendRedirect(contextPath + loginUrl);
                         return;
                     } else {
                         throw new AuthenticationException("you are not allowed");
