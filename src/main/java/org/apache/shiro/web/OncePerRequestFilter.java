@@ -3,7 +3,9 @@ package org.apache.shiro.web;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.AntPathMatcher;
+import org.apache.shiro.util.PathDefinitionMatcher;
 import org.apache.shiro.util.PatternMatcher;
+import org.apache.shiro.web.config.PathDefinition;
 import org.apache.shiro.web.config.ShiroFilterChainDefinition;
 
 import javax.security.sasl.AuthenticationException;
@@ -11,6 +13,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +31,8 @@ public class OncePerRequestFilter implements Filter {
     }
 
     private String loginUrl = "/login.html";
+
+    private Map<String, PathDefinition> pathDefinitionMap = new HashMap<String, PathDefinition>();
 
     /**
      * only absolute url supported
@@ -49,102 +54,78 @@ public class OncePerRequestFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         //login page, pass directly
         HttpServletRequest request = (HttpServletRequest) servletRequest;
-        String contextPath = request.getServletContext().getContextPath();
+        filter(request, servletResponse);
+        filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    private void filter(HttpServletRequest request, ServletResponse servletResponse) throws IOException {
+        String contextPath = request.getContextPath();
         String requestURI = request.getRequestURI().substring(contextPath.length());
         if (requestURI.equals(loginUrl)) {
-            filterChain.doFilter(request, servletResponse);
             return;
         }
 
         Map<String, String> chainMap = filterChainDefinition.getFilterChainMap();
-        if (chainMap != null) {
-            String pattern = null;
-            Set<String> patterns = chainMap.keySet();
-            for (String p : patterns) {
-                boolean matches = patternMatcher.matches(p, requestURI);
-                if (matches) {
-                    pattern = chainMap.get(p);
-                }
-            }
-            if (pattern != null && !pattern.startsWith("anon")) {
-                Subject subject = SecurityUtils.getSubject();
-                boolean b = subject.isAuthenticated();
-                if (pattern.startsWith("authc")) {
-                    if (b) {
-                        if (pattern.length() > 5 && pattern.charAt(5) == ',') {
-                            pattern = pattern.substring(6);
-                        } else {
-                            pattern = "";
-                        }
-                    }
-                }
+        //chainMap not defined
+        if (chainMap == null) {
+            return;
+        }
 
-                String[] split = pattern.split("],");
-                //逗号隔开的最后一条, 如果不包含中括号, 则作为权限失败时的跳转页面
-                String redirect = null;
-                if (split.length > 1) {
-                    int lenLack1 = split.length - 1;
-                    String last = split[lenLack1];
-                    if (!last.contains("[")) {
-                        redirect = last;
-                        String[] dest = new String[lenLack1];
-                        System.arraycopy(split, 0, dest, 0, lenLack1);
-                        split = dest;
-                    }
-                }
-
-
-                if (b) {//if logon, then verify roles and perms
-                    try {
-                        for (String s : split) {
-                            int length = s.length();
-                            if (length < 8) {
-                                continue;
-                            }
-                            int i = s.indexOf("[");
-                            if (i == -1 || i > length - 3) {
-                                continue;
-                            }
-                            String type = s.substring(0, i);
-                            String[] typeValues = s.substring(i + 1, length - 1).split(",");
-                            if ("perms".equals(type)) {
-                                if (typeValues.length == 1) {
-                                    b = subject.isPermitted(typeValues[0]);
-                                } else {
-                                    b = subject.isPermittedAll(typeValues);
-                                }
-                            } else if ("roles".equals(type)) {
-                                if (typeValues.length == 1) {
-                                    b = subject.hasRole(typeValues[0]);
-                                } else {
-                                    b = subject.hasRoles(typeValues);
-                                }
-                            }
-                            if (!b) {
-                                break;
-                            }
-                        }
-                    } catch (Throwable t) {
-                        b = false;
-                    }
-                }
-
-                if (!b) {
-                    if (redirect != null) {
-                        HttpServletResponse response = (HttpServletResponse) servletResponse;
-                        response.sendRedirect(contextPath + redirect);
-                        return;
-                    } else if (loginUrl != null) {
-                        HttpServletResponse response = (HttpServletResponse) servletResponse;
-                        response.sendRedirect(contextPath + loginUrl);
-                        return;
-                    } else {
-                        throw new AuthenticationException("you are not allowed");
-                    }
-                }
+        String pattern = null;
+        Set<String> patterns = chainMap.keySet();
+        for (String p : patterns) {
+            boolean matches = patternMatcher.matches(p, requestURI);
+            if (matches) {
+                pattern = chainMap.get(p);
             }
         }
-        filterChain.doFilter(servletRequest, servletResponse);
+        //no pattern matched
+        if (pattern == null) {
+            return;
+        }
+
+        PathDefinition pathDefinition = pathDefinitionMap.get(pattern);
+        if (pathDefinition == null) {
+            pathDefinition = PathDefinitionMatcher.getPathDefinition(pattern);
+            pathDefinitionMap.put(pattern, pathDefinition);
+        }
+
+        //pattern no need authentication
+        if (!pathDefinition.isAuthc()) {
+            return;
+        }
+
+        Subject subject = SecurityUtils.getSubject();
+        // checkAuthenticated
+        boolean b = subject.isAuthenticated();
+        // checkRoles
+        if (b) {
+            Set<String> roles = pathDefinition.getRoles();
+            b = subject.hasRoles(roles);
+        }
+        // checkPerms
+        if (b) {
+            Set<String> perms = pathDefinition.getPerms();
+            b = subject.isPermittedAll(perms);
+        }
+
+        // all checked
+        if (b) {
+            return;
+        }
+
+        // checked false, redirect
+        String redirectUrl = pathDefinition.getRedirectUrl();
+        if (redirectUrl != null && !redirectUrl.isEmpty()) {
+            HttpServletResponse response = (HttpServletResponse) servletResponse;
+            response.sendRedirect(contextPath + redirectUrl);
+        } else if (loginUrl != null && !loginUrl.isEmpty()) {
+            HttpServletResponse response = (HttpServletResponse) servletResponse;
+            response.sendRedirect(contextPath + loginUrl);
+        } else {
+            throw new AuthenticationException("you are not allowed");
+        }
+
     }
 
     @Override
