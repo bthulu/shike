@@ -23,8 +23,15 @@ import java.util.Set;
  * @author gejian
  */
 public class OncePerRequestFilter implements Filter {
-    private final ShiroFilterChainDefinition filterChainDefinition;
+    private ShiroFilterChainDefinition filterChainDefinition;
     private PatternMatcher patternMatcher;
+
+    public OncePerRequestFilter() {
+    }
+
+    public void setFilterChainDefinition(ShiroFilterChainDefinition filterChainDefinition) {
+        this.filterChainDefinition = filterChainDefinition;
+    }
 
     public OncePerRequestFilter(ShiroFilterChainDefinition filterChainDefinition) {
         this.filterChainDefinition = filterChainDefinition;
