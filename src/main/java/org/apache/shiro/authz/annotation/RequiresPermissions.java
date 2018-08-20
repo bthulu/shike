@@ -1,6 +1,5 @@
 package org.apache.shiro.authz.annotation;
 
-import java.io.Serializable;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,7 +10,7 @@ import java.lang.annotation.Target;
 public @interface RequiresPermissions {
 
     /**
-     * The permission string which will be passed to {@link org.apache.shiro.subject.Subject#isPermitted(Serializable)}
+     * The permission string which will be passed to {@link org.apache.shiro.subject.Subject#isPermitted(String)}
      * to determine if the user is allowed to invoke the code protected by this annotation.
      */
     String[] value();
