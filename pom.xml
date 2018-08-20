@@ -44,25 +44,6 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>public</id>
-            <name>Public Repositories</name>
-            <url>http://192.168.1.118:8081/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <releases>
-                <!-- 默认true，可以省略 -->
-                <enabled>true</enabled>
-                <!-- 指定更新周期，The choices are: always, daily (default), interval:X (where
-                    X is an integer in minutes) or never. -->
-                <updatePolicy>interval:10080</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <build>
         <plugins>
             <plugin>
@@ -98,7 +79,7 @@
         </plugins>
     </build>
 
-    <distributionManagement>
+    <!--<distributionManagement>
         <repository>
             <id>releases</id>
             <url>http://192.168.1.118:8081/nexus/content/repositories/releases</url>
@@ -107,5 +88,5 @@
             <id>snapshots</id>
             <url>http://192.168.1.118:8081/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
-    </distributionManagement>
+    </distributionManagement>-->
 </project>
