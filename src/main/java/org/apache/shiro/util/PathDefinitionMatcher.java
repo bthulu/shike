@@ -53,17 +53,37 @@ public abstract class PathDefinitionMatcher {
                     pathDefinition.setAuthc(true);
                     if (s1.length() > 7) {
                         String[] roles = s1.substring(6).split(",");
-                        pathDefinition.setRoles(new HashSet<String>(Arrays.asList(roles)));
+                        Set<String> set = toSet(roles);
+                        pathDefinition.setRoles(set);
                     }
                 } else if (s1.startsWith("perms[")) {
                     pathDefinition.setAuthc(true);
                     if (s1.length() > 7) {
                         String[] perms = s1.substring(6).split(",");
-                        pathDefinition.setPerms(new HashSet<String>(Arrays.asList(perms)));
+                        Set<String> set = toSet(perms);
+                        pathDefinition.setPerms(set);
                     }
                 }
             }
         }
         return pathDefinition;
+    }
+
+    private static Set<String> toSet(String[] strings) {
+        Set<String> set = new HashSet<String>((int) ((strings.length + 1) / 0.75f + 1));
+        for (String s : strings) {
+            if (s != null && !s.isEmpty()) {
+                set.add(s);
+            }
+        }
+        int size = set.size();
+        switch (size) {
+            case 0:
+                return null;
+            case 1:
+                return Collections.singleton(set.iterator().next());
+            default:
+                return Collections.unmodifiableSet(set);
+        }
     }
 }

@@ -13,9 +13,9 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created on  2017/8/30 14:35
@@ -39,7 +39,7 @@ public class OncePerRequestFilter implements Filter {
 
     private String loginUrl = "/login.html";
 
-    private Map<String, PathDefinition> pathDefinitionMap = new HashMap<String, PathDefinition>();
+    private Map<String, PathDefinition> pathDefinitionMap = new ConcurrentHashMap<String, PathDefinition>();
 
     /**
      * only absolute url supported
@@ -78,12 +78,14 @@ public class OncePerRequestFilter implements Filter {
             return;
         }
 
+        // get first pattern matches the uri, else will be ignored even if matched
         String pattern = null;
         Set<String> patterns = chainMap.keySet();
         for (String p : patterns) {
             boolean matches = patternMatcher.matches(p, requestURI);
             if (matches) {
                 pattern = chainMap.get(p);
+                break;
             }
         }
         //no pattern matched
