@@ -1,4 +1,4 @@
-package org.apache.shiro.web.config;
+package org.apache.shiro.web;
 
 import java.util.Collections;
 import java.util.Set;

@@ -3,10 +3,7 @@ package org.apache.shiro.web;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.AntPathMatcher;
-import org.apache.shiro.util.PathDefinitionMatcher;
 import org.apache.shiro.util.PatternMatcher;
-import org.apache.shiro.web.config.PathDefinition;
-import org.apache.shiro.web.config.ShiroFilterChainDefinition;
 
 import javax.security.sasl.AuthenticationException;
 import javax.servlet.*;
@@ -15,45 +12,33 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created on  2017/8/30 14:35
  *
  * @author gejian
  */
-public class OncePerRequestFilter implements Filter {
-    private ShiroFilterChainDefinition filterChainDefinition;
+public class SecurityWebFilter implements Filter {
     private PatternMatcher patternMatcher;
-
-    public OncePerRequestFilter() {
-    }
-
-    public void setFilterChainDefinition(ShiroFilterChainDefinition filterChainDefinition) {
-        this.filterChainDefinition = filterChainDefinition;
-    }
-
-    public OncePerRequestFilter(ShiroFilterChainDefinition filterChainDefinition) {
-        this.filterChainDefinition = filterChainDefinition;
-    }
-
-    private String loginUrl = "/login.html";
-
-    private Map<String, PathDefinition> pathDefinitionMap = new ConcurrentHashMap<String, PathDefinition>();
+    private final Map<WebPathPattern, PathDefinition> pathMapping;
+    private final String loginUrl;
 
     /**
-     * only absolute url supported
-     * @param loginUrl absolute-login-url
+     * 设置全局登录页面及权限定义
+     *
+     * @param loginUrl    仅支持以/开头的绝对路径
+     * @param pathMapping 权限定义
      */
-    public void setLoginUrl(String loginUrl) {
-        if (loginUrl == null || !loginUrl.startsWith("/")) {
-            throw new IllegalArgumentException("only absolute login url supported");
+    public SecurityWebFilter(String loginUrl, Map<WebPathPattern, PathDefinition> pathMapping) {
+        if (loginUrl != null && !loginUrl.startsWith("/")) {
+            loginUrl = "/" + loginUrl;
         }
         this.loginUrl = loginUrl;
+        this.pathMapping = pathMapping;
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         this.patternMatcher = new AntPathMatcher();
     }
 
@@ -72,31 +57,31 @@ public class OncePerRequestFilter implements Filter {
             return;
         }
 
-        Map<String, String> chainMap = filterChainDefinition.getFilterChainMap();
         //chainMap not defined
-        if (chainMap == null) {
+        if (pathMapping.isEmpty()) {
             return;
         }
 
         // get first pattern matches the uri, else will be ignored even if matched
-        String pattern = null;
-        Set<String> patterns = chainMap.keySet();
-        for (String p : patterns) {
-            boolean matches = patternMatcher.matches(p, requestURI);
+        PathDefinition pathDefinition = null;
+        Set<WebPathPattern> patterns = pathMapping.keySet();
+        for (WebPathPattern wp : patterns) {
+            // 过滤未匹配的请求方法
+            String method = wp.getMethod();
+            if (method != null && !method.isEmpty() && !method.equals(request.getMethod())) {
+                continue;
+            }
+
+            // 匹配路径
+            boolean matches = patternMatcher.matches(wp.getPathPattern(), requestURI);
             if (matches) {
-                pattern = chainMap.get(p);
+                pathDefinition = pathMapping.get(wp);
                 break;
             }
         }
         //no pattern matched
-        if (pattern == null) {
-            return;
-        }
-
-        PathDefinition pathDefinition = pathDefinitionMap.get(pattern);
         if (pathDefinition == null) {
-            pathDefinition = PathDefinitionMatcher.getPathDefinition(pattern);
-            pathDefinitionMap.put(pattern, pathDefinition);
+            return;
         }
 
         //pattern no need authentication
@@ -139,6 +124,5 @@ public class OncePerRequestFilter implements Filter {
 
     @Override
     public void destroy() {
-
     }
 }
