@@ -18,22 +18,19 @@
  */
 package org.apache.shiro.authc;
 
-import org.apache.shiro.ShiroException;
-
-
 /**
  * General exception thrown due to an error during the Authentication process.
  *
  * @since 0.1
  */
-public class AuthenticationException extends ShiroException
+public class AuthenticationException extends RuntimeException
 {
 
     /**
      * Creates a new AuthenticationException.
      */
     public AuthenticationException() {
-        super();
+        super(null, null, true, false);
     }
 
     /**

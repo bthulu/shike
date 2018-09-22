@@ -1,13 +1,13 @@
 package org.apache.shiro.web;
 
-import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.authz.UnauthenticatedException;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.SubjectHolder;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -41,7 +41,7 @@ public class ShiroSpringMvcInterceptor extends HandlerInterceptorAdapter {
 
         //已登陆验证
         boolean authenticated = false;//if logon, set to true. this can reduce assertAuthenticated(subject) while verify permits and roles
-        Subject subject = SecurityUtils.getSubject();
+        Subject subject = SubjectHolder.getSubject();
         if (requiresAuthentication != null) {
             assertAuthenticated(subject);
             authenticated = true;
@@ -104,7 +104,7 @@ public class ShiroSpringMvcInterceptor extends HandlerInterceptorAdapter {
     private void assertAuthenticated(Subject subject) {
         boolean b = subject.isAuthenticated();
         if (!b) {
-            throw new UnauthenticatedException();
+            throw new AuthenticationException();
         }
     }
 }

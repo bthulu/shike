@@ -18,10 +18,8 @@
  */
 package org.apache.shiro.web.tags;
 
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.shiro.subject.SubjectHolder;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -31,15 +29,11 @@ import javax.servlet.jsp.tagext.TagSupport;
  */
 public abstract class SecureTag extends TagSupport {
 
-    //TODO - complete JavaDoc
-
-    private static final Logger log = LoggerFactory.getLogger(SecureTag.class);
-
     public SecureTag() {
     }
 
     protected Subject getSubject() {
-        return SecurityUtils.getSubject();
+        return SubjectHolder.getSubject();
     }
 
     protected void verifyAttributes() throws JspException {

@@ -20,7 +20,9 @@ public class WebPathPattern {
      * http请求方法
      */
     public void setMethod(String method) {
-        this.method = method;
+        if (method != null) {
+            this.method = method.toUpperCase();
+        }
     }
 
     /**

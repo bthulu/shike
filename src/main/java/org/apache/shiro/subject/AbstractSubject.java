@@ -13,6 +13,10 @@ import java.util.Set;
  */
 public abstract class AbstractSubject<T extends Serializable> implements Subject<T> {
 
+    public AbstractSubject() {
+        SubjectHolder.setSubject(this);
+    }
+
     @Override
     public Set<String> getRoles() {
         T principal = getPrincipal();
@@ -37,25 +41,25 @@ public abstract class AbstractSubject<T extends Serializable> implements Subject
     @Override
     public boolean isPermittedAll(String... perms) {
         Set<String> permits = getPermits();
-        return containsAll(permits, permits);
+        return containsAll(permits, perms);
     }
 
     @Override
     public boolean isPermittedAll(Collection<String> perms) {
         Set<String> permits = getPermits();
-        return containsAll(permits, permits);
+        return containsAll(permits, perms);
     }
 
     @Override
     public boolean isAnyPermitted(String... perms) {
         Set<String> permits = getPermits();
-        return containsAny(permits, permits);
+        return containsAny(permits, perms);
     }
 
     @Override
     public boolean isAnyPermitted(Collection<String> perms) {
         Set<String> permits = getPermits();
-        return containsAny(permits, permits);
+        return containsAny(permits, perms);
     }
 
     @Override

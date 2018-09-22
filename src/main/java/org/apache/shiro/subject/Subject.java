@@ -7,7 +7,9 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * the implement must be thread-safe, and only one instance per application, it will be set into SecurityUtils
+ * the implement must be thread-safe, and only one instance per application.
+ * this instance will be set into SubjectHolder.
+ * if extends from AbstractSubject, its default constructor has already done it.
  */
 public interface Subject<T extends Serializable> {
 //    String getSessionTokenKey();

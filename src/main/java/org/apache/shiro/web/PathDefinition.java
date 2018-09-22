@@ -1,15 +1,14 @@
 package org.apache.shiro.web;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.Arrays;
 
 /**
  * @author gejian at 2017/10/20 16:18
  */
 public class PathDefinition {
     private boolean authc = false;
-    private Set<String> roles = Collections.emptySet();
-    private Set<String> perms = Collections.emptySet();
+    private String[] roles = new String[0];
+    private String[] perms = new String[0];
     private String redirectUrl = "";
 
     public boolean isAuthc() {
@@ -20,20 +19,24 @@ public class PathDefinition {
         this.authc = authc;
     }
 
-    public Set<String> getRoles() {
+    public String[] getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<String> roles) {
-        this.roles = roles;
+    public void setRoles(String[] roles) {
+        if (roles != null) {
+            this.roles = roles;
+        }
     }
 
-    public Set<String> getPerms() {
+    public String[] getPerms() {
         return perms;
     }
 
-    public void setPerms(Set<String> perms) {
-        this.perms = perms;
+    public void setPerms(String[] perms) {
+        if (perms != null) {
+            this.perms = perms;
+        }
     }
 
     public String getRedirectUrl() {
@@ -41,15 +44,17 @@ public class PathDefinition {
     }
 
     public void setRedirectUrl(String redirectUrl) {
-        this.redirectUrl = redirectUrl;
+        if (redirectUrl != null) {
+            this.redirectUrl = redirectUrl;
+        }
     }
 
     @Override
     public String toString() {
         return "PathDefinition{" +
                 "authc=" + authc +
-                ", roles=" + roles +
-                ", perms=" + perms +
+                ", roles=" + Arrays.toString(roles) +
+                ", perms=" + Arrays.toString(perms) +
                 ", redirectUrl='" + redirectUrl + '\'' +
                 '}';
     }

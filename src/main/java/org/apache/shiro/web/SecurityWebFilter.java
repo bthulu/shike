@@ -1,15 +1,16 @@
 package org.apache.shiro.web;
 
-import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.SubjectHolder;
 import org.apache.shiro.util.AntPathMatcher;
 import org.apache.shiro.util.PatternMatcher;
 
-import javax.security.sasl.AuthenticationException;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,28 +19,35 @@ import java.util.Set;
  *
  * @author gejian
  */
-public class SecurityWebFilter implements Filter {
+public abstract class SecurityWebFilter implements Filter {
     private PatternMatcher patternMatcher;
-    private final Map<WebPathPattern, PathDefinition> pathMapping;
-    private final String loginUrl;
+    private Map<WebPathPattern, PathDefinition> pathMapping = Collections.emptyMap();
+    private String loginUrl;
 
     /**
-     * 设置全局登录页面及权限定义
-     *
-     * @param loginUrl    仅支持以/开头的绝对路径
-     * @param pathMapping 权限定义
+     * 设置权限定义
+     * @return 权限定义
      */
-    public SecurityWebFilter(String loginUrl, Map<WebPathPattern, PathDefinition> pathMapping) {
-        if (loginUrl != null && !loginUrl.startsWith("/")) {
-            loginUrl = "/" + loginUrl;
-        }
-        this.loginUrl = loginUrl;
-        this.pathMapping = pathMapping;
-    }
+    protected abstract Map<WebPathPattern, PathDefinition> configPathMapping();
+
+    /**
+     * 设置全局登录页面
+     * @return 全局登录页面
+     */
+    protected abstract String configLoginUrl();
 
     @Override
     public void init(FilterConfig filterConfig) {
         this.patternMatcher = new AntPathMatcher();
+        Map<WebPathPattern, PathDefinition> mapping = configPathMapping();
+        if (mapping != null && !mapping.isEmpty()) {
+            this.pathMapping = mapping;
+        }
+        String loginUrl = configLoginUrl();
+        if (loginUrl != null && !loginUrl.startsWith("/")) {
+            loginUrl = "/" + loginUrl;
+        }
+        this.loginUrl = loginUrl;
     }
 
     @Override
@@ -89,17 +97,17 @@ public class SecurityWebFilter implements Filter {
             return;
         }
 
-        Subject subject = SecurityUtils.getSubject();
+        Subject subject = SubjectHolder.getSubject();
         // checkAuthenticated
         boolean b = subject.isAuthenticated();
         // checkRoles
         if (b) {
-            Set<String> roles = pathDefinition.getRoles();
+            String[] roles = pathDefinition.getRoles();
             b = subject.hasRoles(roles);
         }
         // checkPerms
         if (b) {
-            Set<String> perms = pathDefinition.getPerms();
+            String[] perms = pathDefinition.getPerms();
             b = subject.isPermittedAll(perms);
         }
 
@@ -117,7 +125,7 @@ public class SecurityWebFilter implements Filter {
             HttpServletResponse response = (HttpServletResponse) servletResponse;
             response.sendRedirect(contextPath + loginUrl);
         } else {
-            throw new AuthenticationException("you are not allowed");
+            throw new AuthenticationException();
         }
 
     }

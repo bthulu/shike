@@ -1,8 +1,6 @@
 package org.apache.shiro.authz;
 
-import org.apache.shiro.ShiroException;
-
-public class AuthorizationException extends ShiroException {
+public class AuthorizationException extends RuntimeException {
 
     /**
      * Creates a new AuthorizationException.
