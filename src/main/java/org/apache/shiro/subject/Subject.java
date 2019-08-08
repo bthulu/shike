@@ -86,5 +86,5 @@ public interface Subject<T extends Serializable> {
      *
      * @param principals the principals to be logout
      */
-    void logout(T... principals);
+    void logout(Collection<T> principals);
 }

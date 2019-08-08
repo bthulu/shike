@@ -181,7 +181,7 @@ public abstract class AbstractSubject<T extends Serializable> implements Subject
     }
 
     @Override
-    public void logout(T... principal) {
+    public void logout(Collection<T> principal) {
         throw new UnsupportedOperationException("logout specified principals is not supported, you should implement it yourself");
     }
 
